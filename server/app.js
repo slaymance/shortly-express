@@ -103,7 +103,24 @@ app.get('/login',
 
 app.post('/login',
 (req, res, next) => {
-  res.send('Hello login World');
+
+  //  check username
+  models.Users.get({username: req.body.username}).then(results => {
+  // get User info from database, if no user, redirect
+    if (results === undefined) {
+      res.redirect('/login');
+    } else {
+    // else have salt and pass
+    // compare with compareHash function using hash and salt
+    // if user exists, send to '/' else redirect to login
+      if (utils.compareHash(req.body.password, results.password, results.salt)) {
+        res.redirect('/');
+      } else {
+        res.redirect('/login');
+      }
+    }
+  });
+
 });
 
 
