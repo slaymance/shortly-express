@@ -86,10 +86,11 @@ app.post('/signup',
   // is user in DB  yes --> alert, pick new name or login  no --> create a new user, create session, redirect to home page
   models.Users.get({username: req.body.username}).then(results => {
     if (results !== undefined) {
-      res.send(alert('pick a new user name or login'));
+      res.redirect('/signup');
     } else {
-      models.Users.create(req.body);
-      res.render('index');
+      models.Users.create(req.body).then(() => {
+        res.redirect('/');
+      });
     }
   });
 
