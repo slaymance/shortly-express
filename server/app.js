@@ -74,6 +74,48 @@ app.post('/links',
     });
 });
 
+app.get('/signup',
+(req, res, next) => {
+  res.render('signup');
+});
+
+app.post('/signup',
+(req, res, next) => {
+  //console.log('req: ', req);
+  // TODO check password and username not blank
+  // is user in DB  yes --> alert, pick new name or login  no --> create a new user, create session, redirect to home page
+  models.Users.get({username: req.body.username}).then(results => {
+    if (results !== undefined) {
+      res.send(alert('pick a new user name or login'));
+    } else {
+      models.Users.create(req.body);
+      res.render('index');
+    }
+  });
+
+});
+
+app.get('/login',
+(req, res, next) => {
+  res.render('login');
+});
+
+app.post('/login',
+(req, res, next) => {
+  res.send('Hello login World');
+});
+
+
+
+
+
+
+
+
+
+
+
+
 /************************************************************/
 // Write your authentication routes here
 /************************************************************/
