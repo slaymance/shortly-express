@@ -2,15 +2,54 @@ const models = require('../models');
 const Promise = require('bluebird');
 
 module.exports.createSession = (req, res, next) => {
-
   let makeNewSession = function () {
-    let promiseArray = [];
-    promiseArray.push(models.Sessions.create());
-    console.log(req.body.username);
-    promiseArray.push(models.Users.get({username: req.body.username}));
-    Promise.all(promiseArray).then(results => {
-      console.log(results);
+    models.Sessions.create().then(result => {
+      models.Sessions.get({id: result.insertId}).then(result => {
+        req.session = {hash: result.hash};
+        res.cookies = {shortlyid: {value: result.hash}};
+        next();
+      });
     });
+  };
+  if (!req.cookies || Object.keys(req.cookies).length === 0) {
+    makeNewSession();
+  } else {
+    models.Sessions.get({hash: req.cookies.shortlyid}).then(result => {
+      if (result) {
+        req.session = {hash: result.hash};
+        if (result.user) {
+          req.session.user = {username: result.user.username};
+          req.session.userId = result.userId;
+        }
+        next();
+      } else {
+        makeNewSession();
+      }
+    });
+  }
+};
+
+/************************************************************/
+// Add additional authentication middleware functions below
+/************************************************************/
+
+    // let promiseArray = [];
+    // // is the user logged in???
+    // promiseArray.push(models.Sessions.create()); // update with a user ID if we have one
+    // promiseArray.push(models.Users.get({username: (req.body.username)}));
+
+    // Promise.all(promiseArray).then(results => {
+    //   models.Sessions.get({id: results[0].insertId}).then(result => {
+    //     console.log(req);
+    //     req.session = {
+    //       hash: result.hash,
+    //       user: {username: 'Bob'}
+    //     };
+    //     res.cookies.shortlyid = {value: result.hash};
+    //     next();    
+    //   });
+
+    // });
     // .then(result => {
     //   console.log('result: ', result);
       // add user id to newly created session row
@@ -19,25 +58,3 @@ module.exports.createSession = (req, res, next) => {
       // req.session = {hash: result};
     // });
     // need to set new cookie
-  };
-
-  if (Object.keys(req.cookies).length === 0) {
-    makeNewSession();
-  } else if (/* No results from sessions table query of the cookies */true) {
-    // clear that cookie
-    makeNewSession();
-  } else {
-    // restore that user's session
-  }
-};
-
-/************************************************************/
-// Add additional authentication middleware functions below
-/************************************************************/
-
-// check cookies  no cookie(s)
-  // store   session in DB,  assign session's hash  to the cookie
-
-// if cookie and is not in database, delete it , call above new seesion, new cookie
-
-// if cookie exists in db, restore user's session -
